@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Request;
+use \Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,3 +17,9 @@ use Illuminate\Http\Request;
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
+Route::resource('buyer','Buyer\BuyerController',['only' => ['index','show']]);
+Route::resource('product','Product\ProductController',['only' => ['index','show']]);
+Route::resource('seller','Seller\SellerController',['only' => ['index','show']]);
+Route::resource('category','Category\CategoryController',['except' => ['create','edit']]);
+Route::resource('transaction','Transaction\TransactionController',['only' => ['index','show']]);
+Route::resource('user','User\UserController',['except' => ['create','edit']]);
