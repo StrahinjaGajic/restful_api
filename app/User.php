@@ -52,6 +52,8 @@ class User extends Authenticatable
     }
 
     public static function generateVerificationCode() {
-        return str_random(40);
+        $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        return str_shuffle($permitted_chars);
     }
 }
