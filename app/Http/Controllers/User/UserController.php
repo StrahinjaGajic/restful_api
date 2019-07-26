@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers\User;
 
+use App\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
+use Mockery\Exception;
 
 class UserController extends Controller
 {
@@ -14,7 +17,9 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+        $user = User::all();
+
+        return response()->json(['data' => $user],200);
     }
 
     /**
@@ -28,14 +33,35 @@ class UserController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request)
     {
-        //
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6|confirmed'
+        ],[
+            'email.required' => 'Email address is required',
+            'email.unique' => 'This email is already taken'
+        ]);
+
+        if($validator->fails()){
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        $data = $request->all();
+        $data['password'] = bcrypt($request->password);
+        $data['verified'] = User::UNVERIFIED_USER;
+        $data['verification_token'] = User::generateVerificationCode();
+        $data['admin'] = User::REGULAR_USER;
+
+        $user = User::create($data);
+
+        return response()->json(['data' => $user],201);
     }
 
     /**
@@ -46,7 +72,9 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        return response()->json(['data' => $user],200);
     }
 
     /**
@@ -69,7 +97,42 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $user = User::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'string|min:3',
+            'email' => 'email|unique:users,email,'.$user->id,
+            'admin' => 'in:'.User::REGULAR_USER.','.User::ADMIN_USER,
+            'password' => 'min:6|confirmed'
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()],422);
+        }
+        if($request->has('name')) {
+            $user->name = $request->name;
+        }
+        if ($request->has('email') && $user->email != $request->email) {
+            $user->verified = User::UNVERIFIED_USER;
+            $user->verification_token = User::generateVerificationCode();
+            $user->email = $request->email;
+        }
+        if($request->has('password')) {
+            $user->password = bcrypt($request->password);
+        }
+
+        if($request->has('admin')) {
+            if (!$user->isVerified()) {
+                return response()->json(['error' => 'Only verified users can modify the admin field','code' => 409],409);
+            }
+            $user->admin = $request->admin;
+        }
+        if(!$user->isDirty()){
+            return response()->json(['error' => 'You need to specify a different value to update','code' => 422],422);
+        }
+
+        $user->save();
+
+        return response()->json(['data' => $user],200);
     }
 
     /**
@@ -80,6 +143,10 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        //
+            $user = User::findOrFail($id);
+
+            $user->delete();
+
+            return response()->json(['data' => $user,'message' => 'User successfuly deleted','code' => 200],200);
     }
 }
