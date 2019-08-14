@@ -20,3 +20,8 @@ use \Illuminate\Support\Facades\Auth;
 
 //Route::get('/home', 'HomeController@index')->name('home');
 
+Route::get('email-test', function(){
+    $user['email'] = 'test@test.com';
+
+    dispatch(new App\Jobs\SendRegisterEmail($user));
+});

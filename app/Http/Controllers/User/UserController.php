@@ -64,7 +64,7 @@ class UserController extends ApiController
         $user = User::findOrFail($id);
 
         return $this->showOne($user);
-    }
+    } 
 
     /**
      * Update the specified resource in storage.
