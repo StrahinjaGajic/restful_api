@@ -13,6 +13,9 @@ class Category extends Model
     protected $fillable = [
         'name','description'
     ];
+    protected $hidden = [
+        'pivot'
+    ];
 
     public function product() {
         return $this->belongsToMany(Product::class,'category_product','category_id','product_id');

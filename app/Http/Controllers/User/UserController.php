@@ -10,9 +10,9 @@ use Illuminate\Support\Facades\Validator;
 class UserController extends ApiController
 {
     /**
-     * Display a listing of the resource.
+     * Return list of all users
      *
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\JsonResponse
      */
     public function index()
     {
@@ -28,7 +28,6 @@ class UserController extends ApiController
      */
     public function store(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'name' => 'required|string',
             'email' => 'required|email|unique:users',
